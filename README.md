@@ -115,6 +115,3 @@ All settings are controlled via environment variables or `.env` file. See `.env.
 - `VALIDATION_THRESHOLD` — Minimum score to pass validation (default: 0.7)
 - `MAX_CORRECTION_LOOPS` — Max retry iterations (default: 3)
 
-## License
-
-MIT
