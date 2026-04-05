@@ -27,9 +27,16 @@ class Settings(BaseSettings):
 
     # ── Groq LLM ────────────────────────────────────────────────────
     groq_api_key: str = ""
+    groq_api_keys: list[str] = []  # Extra keys for rotation
     groq_model: str = "llama-3.3-70b-versatile"
     groq_temperature: float = 0.1
     groq_max_tokens: int = 4096
+
+    # ── Mode Defaults ────────────────────────────────────────────────
+    normal_mode_top_k: int = 5
+    normal_mode_graph_depth: int = 1
+    deep_research_top_k: int = 10
+    deep_research_graph_depth: int = 3
 
     # ── Neo4j (GraphRAG) ────────────────────────────────────────────
     neo4j_uri: str = "bolt://localhost:7687"
@@ -60,6 +67,13 @@ class Settings(BaseSettings):
 
     # ── Reports ─────────────────────────────────────────────────────
     reports_dir: str = "./data/reports"
+
+    # ── MongoDB (Chat Persistence) ──────────────────────────────────
+    mongodb_url: str = "mongodb://localhost:27017"
+    mongodb_db_name: str = "scholarsync_db"
+
+    # ── Firebase Auth ───────────────────────────────────────────────
+    firebase_credentials_path: str = "./firebase-service-account.json"
 
 
 @lru_cache()

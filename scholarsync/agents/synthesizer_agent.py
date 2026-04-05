@@ -23,20 +23,27 @@ from scholarsync.utils.schemas import (
 logger = get_logger(__name__)
 
 
-SYNTHESIS_SYSTEM_PROMPT = """You are the Final Synthesizer Agent of ScholarSync, a multi-agent literature review system.
+SYNTHESIS_SYSTEM_PROMPT = """You are the Final Synthesizer Agent of ScholarSync, a deep-research multi-agent literature review system.
 
-Your role is to merge validated extractions from multiple research papers into a comprehensive,
-well-structured literature review.
+Your role is to produce a COMPREHENSIVE, PUBLICATION-QUALITY literature review from validated extractions across multiple research papers.
+This is NOT a brief summary — this is deep academic research synthesis. Each section must be thorough and exhaustive.
 
 You MUST produce valid JSON with this structure:
 {
-  "title": "Literature Review: [Topic]",
-  "summary": "A comprehensive executive summary of the review (2-3 paragraphs)",
-  "methodology_comparison": "Detailed comparison of methodologies across papers, using citations like [1], [2]",
-  "key_findings": "Synthesis of key findings across all papers with citations",
-  "cross_paper_insights": "Novel insights discovered by comparing across papers, connections between works",
-  "identified_risks": "Consolidated risks, limitations, and gaps across the literature",
-  "research_gaps": "Identified gaps where future research is needed",
+  "title": "Literature Review: [Specific Topic]",
+
+  "summary": "REQUIRED: A deep executive summary of AT LEAST 400 words. Cover: the research landscape, why this topic matters, what the key papers contribute collectively, major trends observed, and the overall state of the field. Be specific about methods, results, and significance.",
+
+  "methodology_comparison": "REQUIRED: AT LEAST 600 words. Compare and contrast ALL methodologies found across papers in depth. Discuss: experimental setups, datasets used, evaluation metrics, model architectures, training procedures, and algorithmic approaches. Use a structured comparison — highlight where papers agree, differ, improve upon each other, or use complementary approaches. Always cite with [1], [2], etc.",
+
+  "key_findings": "REQUIRED: AT LEAST 600 words. Synthesize the most important findings from ALL papers. Do NOT list them paper by paper — organize thematically. Include specific numbers, metrics, benchmark scores, and direct quotes where available. Discuss what these findings mean collectively and how they advance the field.",
+
+  "cross_paper_insights": "REQUIRED: AT LEAST 400 words. Identify non-obvious connections, patterns, and insights that ONLY emerge when reading all papers together. What do they collectively suggest? Are there contradictions? Convergent conclusions? Complementary techniques that could be combined? What story do these papers tell as a whole?",
+
+  "identified_risks": "REQUIRED: AT LEAST 300 words. Comprehensively document risks, limitations, threats to validity, ethical concerns, reproducibility issues, data biases, computational constraints, and generalization problems found across the literature. Be specific — cite which papers report which limitations.",
+
+  "research_gaps": "REQUIRED: AT LEAST 300 words. Identify specific, actionable gaps in the current literature. What questions remain unanswered? What datasets are missing? What methods have not been tried? What populations or domains are understudied? Propose concrete future research directions.",
+
   "safety_scorecard": {
     "grounding_score": 0.85,
     "citation_coverage": 0.90,
@@ -46,14 +53,15 @@ You MUST produce valid JSON with this structure:
   }
 }
 
-Rules:
-1. ALWAYS cite sources using [paper_number] notation
-2. Compare and contrast findings across papers — don't just summarize individually
-3. Identify agreements, contradictions, and complementary insights
-4. Be specific — use data, metrics, and quotes from the original papers
-5. Organize findings thematically, not by paper
-6. Include a balanced assessment of risks and limitations
-7. Write in academic but accessible language
+CRITICAL RULES:
+1. ALWAYS cite with [paper_number] — every claim must be grounded in the source papers
+2. Never just list paper summaries — SYNTHESIZE and COMPARE across papers thematically
+3. Use specific data: numbers, percentages, benchmark names, dataset names, accuracy scores
+4. Include direct quotes from papers where they add value
+5. Write at a PhD / academic journal level — detailed, precise, and analytical
+6. Each section must meet its minimum word count — do NOT truncate
+7. Identify agreements AND contradictions across papers
+8. Output valid JSON only — do not add any text outside the JSON object
 """
 
 
@@ -159,20 +167,20 @@ def synthesize_review(
 Paper References:
 {paper_references}
 
-=== EXTRACTED ENTITIES ===
-{chr(10).join(all_entities[:50]) or "None extracted"}
+=== EXTRACTED ENTITIES & CONCEPTS ===
+{chr(10).join(all_entities[:200]) or "None extracted"}
 
 === EXTRACTED METHODOLOGY ===
-{chr(10).join(all_methodology[:30]) or "None extracted"}
+{chr(10).join(all_methodology[:150]) or "None extracted"}
 
-=== EXTRACTED FINDINGS ===
-{chr(10).join(all_findings[:40]) or "None extracted"}
+=== EXTRACTED FINDINGS & RESULTS ===
+{chr(10).join(all_findings[:200]) or "None extracted"}
 
 === EXTRACTED RISKS & LIMITATIONS ===
-{chr(10).join(all_risks[:30]) or "None extracted"}
+{chr(10).join(all_risks[:150]) or "None extracted"}
 
-=== EXTRACTED CLAIMS ===
-{chr(10).join(all_claims[:30]) or "None extracted"}
+=== EXTRACTED CLAIMS & CONTRIBUTIONS ===
+{chr(10).join(all_claims[:150]) or "None extracted"}
 {graph_section}
 
 Validation Average Score: {avg_score:.2f}
@@ -191,8 +199,8 @@ Output valid JSON only."""
             {"role": "system", "content": SYNTHESIS_SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
         ],
-        temperature=0.2,
-        max_tokens=settings.groq_max_tokens,
+        temperature=0.3,
+        max_tokens=8192,
         response_format={"type": "json_object"},
     )
 

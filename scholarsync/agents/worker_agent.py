@@ -74,7 +74,7 @@ def extract_from_paper(
     search_query = f"{subtask.prompt} {subtask.description}"
     chunks = vector_search(
         query=search_query,
-        n_results=8,
+        n_results=15,
         paper_id=paper_id,
     )
 

@@ -1,5 +1,6 @@
 # Environment files
 .env
+firebase-service-account.json
 
 # Virtual environment
 venv/

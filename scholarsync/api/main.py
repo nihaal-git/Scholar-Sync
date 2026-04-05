@@ -8,6 +8,7 @@ Serves the frontend static files and manages background pipeline tasks.
 from __future__ import annotations
 
 import os
+import json
 import uuid
 import shutil
 import asyncio
@@ -19,6 +20,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTa
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
 
 from scholarsync.config.settings import get_settings
 from scholarsync.utils.logger import get_logger
@@ -37,6 +39,11 @@ from scholarsync.ingestion.chunker import chunk_document
 from scholarsync.rag.vector_store import add_chunks, reset_collection
 from scholarsync.workflow.langgraph_pipeline import run_pipeline
 
+# Chat module
+from scholarsync.chat.router import router as chat_router
+from scholarsync.chat.database import init_db as init_chat_db, close_db as close_chat_db
+from scholarsync.chat.firebase_auth import init_firebase
+
 logger = get_logger(__name__)
 settings = get_settings()
 
@@ -52,8 +59,20 @@ async def lifespan(app: FastAPI):
     os.makedirs(settings.upload_dir, exist_ok=True)
     os.makedirs(settings.reports_dir, exist_ok=True)
     os.makedirs(settings.chroma_persist_dir, exist_ok=True)
+
+    # Initialize chat subsystem (MongoDB + Firebase)
+    try:
+        init_firebase()
+        await init_chat_db()
+        logger.info("Chat subsystem initialized (MongoDB + Firebase)")
+    except Exception as e:
+        logger.warning("Chat subsystem init failed (non-fatal): %s", e)
+
     logger.info("ScholarSync API starting up")
     yield
+
+    # Shutdown
+    await close_chat_db()
     logger.info("ScholarSync API shutting down")
 
 
@@ -74,6 +93,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Chat router
+app.include_router(chat_router)
 
 
 # ── Health Check ────────────────────────────────────────────────────
@@ -102,6 +124,16 @@ async def health_check():
         services["chromadb"] = "connected"
     except Exception:
         services["chromadb"] = "unavailable"
+
+    # Check MongoDB
+    try:
+        from scholarsync.chat.database import check_connection
+        if await check_connection():
+            services["mongodb"] = "connected"
+        else:
+            services["mongodb"] = "unavailable"
+    except Exception:
+        services["mongodb"] = "unavailable"
 
     return HealthResponse(
         status="ok",
@@ -273,6 +305,95 @@ async def get_report(session_id: str):
         report_markdown=report_md,
         progress_messages=pipeline_state.get("progress_messages", []),
         errors=pipeline_state.get("errors", []),
+    )
+
+
+# ── Ask — Mode-Aware Chat (no auth required for embedded UI) ────────
+
+class AskRequest(BaseModel):
+    """Request body for the /ask endpoint."""
+    session_id: str
+    query: str
+    deep_research: bool = False
+    history: list[dict] = []  # [{role, content}, ...]
+
+class AskResponse(BaseModel):
+    """Response body for the /ask endpoint."""
+    session_id: str
+    response: str
+    mode: str
+
+@app.post("/ask", response_model=AskResponse)
+async def ask_question(request: AskRequest):
+    """
+    Synchronous ask endpoint for the embedded UI.
+    Routes through normal or deep research mode.
+    No Firebase auth required.
+    """
+    from scholarsync.chat.mode_router import route_message
+
+    mode_label = "deep_research" if request.deep_research else "normal"
+    logger.info("Ask endpoint: session=%s, mode=%s", request.session_id, mode_label)
+
+    try:
+        response_text = await route_message(
+            chat_id=request.session_id,
+            message=request.query,
+            history=request.history,
+            deep_research=request.deep_research,
+        )
+    except Exception as e:
+        logger.error("Ask endpoint error: %s", e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process: {str(e)}",
+        )
+
+    return AskResponse(
+        session_id=request.session_id,
+        response=response_text,
+        mode=mode_label,
+    )
+
+
+# ── SSE Streaming Endpoint ──────────────────────────────────────────
+
+from fastapi.responses import StreamingResponse
+
+@app.post("/ask/stream")
+async def ask_stream(request: AskRequest):
+    """
+    SSE streaming endpoint — streams tokens as they arrive from the LLM.
+    Uses Server-Sent Events format.
+    """
+    from scholarsync.chat.mode_router import route_message_stream
+
+    logger.info("Stream endpoint: session=%s, deep=%s", request.session_id, request.deep_research)
+
+    async def event_generator():
+        try:
+            async for event in route_message_stream(
+                chat_id=request.session_id,
+                message=request.query,
+                history=request.history,
+                deep_research=request.deep_research,
+            ):
+                evt_type = event.get("event", "token")
+                data = event.get("data", "")
+                # SSE format: each field on its own line, double newline to end
+                yield f"event: {evt_type}\ndata: {json.dumps(data)}\n\n"
+        except Exception as e:
+            logger.error("Stream error: %s", e)
+            yield f"event: error\ndata: {json.dumps(str(e))}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 
