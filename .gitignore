@@ -2,6 +2,8 @@
 .env
 firebase-service-account.json
 
+.env.example
+
 # Virtual environment
 venv/
 .venv/
