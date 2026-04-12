@@ -75,6 +75,12 @@ class Settings(BaseSettings):
     # ── Firebase Auth ───────────────────────────────────────────────
     firebase_credentials_path: str = "./firebase-service-account.json"
 
+    # ── Local Auth (SQLite + JWT) ───────────────────────────────────
+    jwt_secret_key: str = "change-me-to-a-secure-random-string-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_expiry_minutes: int = 1440  # 24 hours
+    auth_db_path: str = "./data/auth.db"
+
 
 @lru_cache()
 def get_settings() -> Settings:

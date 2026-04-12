@@ -44,6 +44,10 @@ from scholarsync.chat.router import router as chat_router
 from scholarsync.chat.database import init_db as init_chat_db, close_db as close_chat_db
 from scholarsync.chat.firebase_auth import init_firebase
 
+# Auth module (local username/password)
+from scholarsync.auth.router import router as auth_router
+from scholarsync.auth.database import init_auth_db
+
 logger = get_logger(__name__)
 settings = get_settings()
 
@@ -59,6 +63,13 @@ async def lifespan(app: FastAPI):
     os.makedirs(settings.upload_dir, exist_ok=True)
     os.makedirs(settings.reports_dir, exist_ok=True)
     os.makedirs(settings.chroma_persist_dir, exist_ok=True)
+
+    # Initialize local auth database (SQLite)
+    try:
+        await init_auth_db()
+        logger.info("Auth database initialized (SQLite)")
+    except Exception as e:
+        logger.warning("Auth DB init failed (non-fatal): %s", e)
 
     # Initialize chat subsystem (MongoDB + Firebase)
     try:
@@ -93,6 +104,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Auth router (local username/password)
+app.include_router(auth_router)
 
 # Chat router
 app.include_router(chat_router)
@@ -414,6 +428,24 @@ async def serve_frontend():
         {"message": "ScholarSync API is running. Frontend not found at expected path."},
         status_code=200,
     )
+
+
+@app.get("/login")
+async def serve_login():
+    """Serve the login page."""
+    login_path = _frontend_dir / "login.html"
+    if login_path.exists():
+        return FileResponse(str(login_path))
+    return JSONResponse({"error": "Login page not found"}, status_code=404)
+
+
+@app.get("/register")
+async def serve_register():
+    """Serve the registration page."""
+    register_path = _frontend_dir / "register.html"
+    if register_path.exists():
+        return FileResponse(str(register_path))
+    return JSONResponse({"error": "Register page not found"}, status_code=404)
 
 
 # Mount static files if directory exists

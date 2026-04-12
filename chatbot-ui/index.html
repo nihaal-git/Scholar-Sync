@@ -1171,6 +1171,74 @@
     #sidebar-overlay.visible {
       display: block;
     }
+
+    /* ─── Sidebar User / Logout ─── */
+    .sidebar-user {
+      padding: 14px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    .sidebar-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-light);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-user-role {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.25);
+      margin-top: 1px;
+    }
+
+    .sidebar-logout-btn {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logout-btn:hover {
+      background: rgba(225, 112, 85, 0.15);
+      border-color: rgba(225, 112, 85, 0.3);
+    }
+
+    .sidebar-logout-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: #e17055;
+    }
   </style>
 </head>
 
@@ -1199,7 +1267,18 @@
       </div>
       <div class="sidebar-list-header">Recent Reviews</div>
       <div id="conversation-list"></div>
-      <div class="sidebar-footer">ScholarSync v1.0 · Agentic AI</div>
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">U</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-display-name">User</div>
+          <div class="sidebar-user-role">ScholarSync v1.0</div>
+        </div>
+        <button class="sidebar-logout-btn" onclick="handleLogout()" title="Sign out">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+          </svg>
+        </button>
+      </div>
     </aside>
 
     <main id="chat-area" class="centered">
@@ -1325,6 +1404,21 @@
   </div>
 
   <script>
+    /* ================================================================
+       AUTH GUARD — redirect to login if not authenticated
+    ================================================================ */
+    (function authGuard() {
+      function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+      }
+      const token = getCookie('access_token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+    })();
+
     /* ================================================================
        CONFIG
     ================================================================ */
@@ -1954,9 +2048,35 @@
     }
 
     /* ================================================================
+       LOGOUT
+    ================================================================ */
+    async function handleLogout() {
+      try {
+        await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      } catch (e) { /* ignore */ }
+      localStorage.removeItem('scholarsync_username');
+      localStorage.removeItem('scholarsync_token');
+      // Clear the cookie client-side as well
+      document.cookie = 'access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      window.location.href = '/login';
+    }
+
+    /* ================================================================
+       SHOW USER INFO IN SIDEBAR
+    ================================================================ */
+    function showUserInfo() {
+      const username = localStorage.getItem('scholarsync_username') || 'User';
+      const nameEl = document.getElementById('user-display-name');
+      const avatarEl = document.getElementById('user-avatar');
+      if (nameEl) nameEl.textContent = username;
+      if (avatarEl) avatarEl.textContent = username.charAt(0).toUpperCase();
+    }
+
+    /* ================================================================
        INIT
     ================================================================ */
     function init() {
+      showUserInfo();
       if (!state.activeChatId && state.conversations.length > 0) state.activeChatId = state.conversations[state.conversations.length - 1].id;
       renderSidebar();
       if (state.activeChatId) loadConversation(state.activeChatId); else renderMessages(null);

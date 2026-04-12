@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — ScholarSync</title>
+  <meta name="description" content="Create your ScholarSync account — AI-powered automated literature review assistant" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #0a0a14;
+      --bg-secondary: #0f0f1a;
+      --bg-card: rgba(20, 20, 40, 0.7);
+      --bg-input: rgba(255, 255, 255, 0.05);
+      --accent: #6c5ce7;
+      --accent-light: #a388ee;
+      --accent-glow: rgba(108, 92, 231, 0.2);
+      --accent-gradient: linear-gradient(135deg, #6c5ce7, #a388ee);
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --danger: #e17055;
+      --text-primary: #e8ecf4;
+      --text-secondary: #8892a4;
+      --text-muted: #5a6478;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(108, 92, 231, 0.5);
+      --shadow-glow: 0 0 60px rgba(108, 92, 231, 0.15);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-y: auto;
+    }
+
+    /* ─── Background Effects ─── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(108, 92, 231, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(163, 136, 238, 0.04) 0%, transparent 50%);
+      z-index: 0;
+    }
+
+    .bg-grid::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: float 20s ease-in-out infinite; z-index: 0; }
+    .orb-1 { width: 300px; height: 300px; background: rgba(108, 92, 231, 0.15); top: -100px; right: -50px; }
+    .orb-2 { width: 250px; height: 250px; background: rgba(163, 136, 238, 0.1); bottom: -80px; left: -60px; animation-delay: -7s; }
+    .orb-3 { width: 180px; height: 180px; background: rgba(108, 92, 231, 0.08); top: 50%; left: 50%; animation-delay: -14s; }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -20px) scale(1.05); }
+      50% { transform: translate(-20px, 30px) scale(0.95); }
+      75% { transform: translate(20px, 20px) scale(1.02); }
+    }
+
+    .auth-container {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+    }
+
+    .auth-card {
+      width: 100%; max-width: 440px;
+      background: var(--bg-card);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: 24px;
+      padding: 44px 40px 40px;
+      box-shadow: var(--shadow-glow), 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: cardEntry 0.6s ease-out;
+    }
+
+    @keyframes cardEntry {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .auth-logo {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; margin-bottom: 8px;
+    }
+
+    .logo-icon {
+      width: 48px; height: 48px;
+      background: var(--accent-gradient); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 20px rgba(108, 92, 231, 0.35);
+    }
+
+    .logo-icon svg { width: 26px; height: 26px; fill: white; }
+
+    .logo-text {
+      font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .auth-subtitle {
+      text-align: center; color: var(--text-secondary);
+      font-size: 14.5px; margin-bottom: 32px; line-height: 1.5;
+    }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.3px;
+    }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+
+    .input-icon {
+      position: absolute; left: 14px; width: 18px; height: 18px;
+      color: var(--text-muted); pointer-events: none;
+      transition: color var(--transition);
+    }
+
+    .form-input {
+      width: 100%; padding: 13px 14px 13px 44px;
+      background: var(--bg-input); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 14.5px; color: var(--text-primary);
+      outline: none;
+      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+    }
+
+    .form-input::placeholder { color: var(--text-muted); }
+
+    .form-input:focus {
+      border-color: var(--border-focus);
+      background: rgba(108, 92, 231, 0.04);
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+    }
+
+    .form-input:focus ~ .input-icon,
+    .input-wrapper:focus-within .input-icon { color: var(--accent-light); }
+
+    .form-input.input-error { border-color: var(--danger); }
+    .form-input.input-success { border-color: var(--success); }
+
+    .field-error {
+      font-size: 12px; color: var(--danger); margin-top: 6px;
+      display: none; align-items: center; gap: 4px;
+    }
+    .field-error.visible { display: flex; }
+
+    .password-toggle {
+      position: absolute; right: 14px; background: none; border: none;
+      cursor: pointer; color: var(--text-muted); padding: 4px;
+      display: flex; align-items: center; transition: color var(--transition);
+    }
+    .password-toggle:hover { color: var(--text-secondary); }
+    .password-toggle svg { width: 18px; height: 18px; }
+
+    /* ─── Password Strength Meter ─── */
+    .strength-meter { margin-top: 10px; }
+
+    .strength-bar-track {
+      width: 100%; height: 4px;
+      background: rgba(255,255,255,0.06); border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .strength-bar-fill {
+      height: 100%; width: 0%;
+      border-radius: 2px; transition: width 0.4s ease, background 0.4s ease;
+    }
+
+    .strength-label {
+      font-size: 11.5px; font-weight: 600; margin-top: 6px;
+      transition: color var(--transition);
+      color: var(--text-muted);
+    }
+
+    .strength-weak .strength-bar-fill { width: 33%; background: var(--danger); }
+    .strength-weak .strength-label { color: var(--danger); }
+
+    .strength-fair .strength-bar-fill { width: 66%; background: var(--warning); }
+    .strength-fair .strength-label { color: var(--warning); }
+
+    .strength-strong .strength-bar-fill { width: 100%; background: var(--success); }
+    .strength-strong .strength-label { color: var(--success); }
+
+    /* ─── Submit Button ─── */
+    .auth-btn {
+      width: 100%; padding: 14px;
+      background: var(--accent-gradient); border: none; border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
+      color: white; cursor: pointer; transition: all var(--transition);
+      position: relative; overflow: hidden; letter-spacing: 0.2px;
+      margin-top: 4px;
+    }
+
+    .auth-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(108, 92, 231, 0.4); }
+    .auth-btn:active:not(:disabled) { transform: translateY(0); }
+    .auth-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .auth-btn .btn-text { transition: opacity 0.2s; }
+    .auth-btn .btn-loader {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .auth-btn.loading .btn-text { opacity: 0; }
+    .auth-btn.loading .btn-loader { opacity: 1; }
+
+    .spinner {
+      width: 22px; height: 22px;
+      border: 2.5px solid rgba(255,255,255,0.3); border-top-color: white;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Messages ─── */
+    .auth-message {
+      padding: 12px 16px; border-radius: var(--radius-sm);
+      font-size: 13.5px; font-weight: 500; margin-bottom: 20px;
+      display: none; align-items: center; gap: 10px;
+      animation: messageSlide 0.3s ease-out;
+    }
+    .auth-message.visible { display: flex; }
+    .auth-message.error { background: rgba(225,112,85,0.12); border: 1px solid rgba(225,112,85,0.25); color: #f0907c; }
+    .auth-message.success { background: rgba(0,184,148,0.12); border: 1px solid rgba(0,184,148,0.25); color: #4cd9b4; }
+
+    @keyframes messageSlide { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+    .shake { animation: shake 0.4s ease-out; }
+
+    .auth-footer {
+      text-align: center; margin-top: 28px; font-size: 14px; color: var(--text-secondary);
+    }
+    .auth-footer a { color: var(--accent-light); text-decoration: none; font-weight: 600; transition: color var(--transition); }
+    .auth-footer a:hover { color: var(--accent); text-decoration: underline; }
+
+    /* ─── Password Requirements ─── */
+    .pw-requirements {
+      margin-top: 8px; padding: 12px 14px;
+      background: rgba(255,255,255,0.03); border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .pw-req {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-muted);
+      padding: 3px 0; transition: color var(--transition);
+    }
+
+    .pw-req.met { color: var(--success); }
+
+    .pw-req .req-icon {
+      width: 14px; height: 14px; flex-shrink: 0;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 8px; transition: all var(--transition);
+      border: 1.5px solid var(--text-muted); color: transparent;
+    }
+
+    .pw-req.met .req-icon {
+      background: var(--success); border-color: var(--success); color: white;
+    }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 32px 24px 28px; border-radius: 20px; }
+      .logo-text { font-size: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+          </svg>
+        </div>
+        <span class="logo-text">ScholarSync</span>
+      </div>
+      <p class="auth-subtitle">Create your research account</p>
+
+      <div class="auth-message" id="auth-message">
+        <span id="auth-message-icon"></span>
+        <span id="auth-message-text"></span>
+      </div>
+
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <!-- Username -->
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+            </svg>
+            <input type="text" id="username" class="form-input" placeholder="Choose a username" autocomplete="username" required autofocus oninput="validateUsername()" />
+          </div>
+          <div class="field-error" id="username-error">⚠ Error</div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+            </svg>
+            <input type="password" id="password" class="form-input" placeholder="Create a password" autocomplete="new-password" required style="padding-right: 48px" oninput="checkPasswordStrength()" />
+            <button type="button" class="password-toggle" onclick="togglePassword('password', this)" aria-label="Toggle password">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Password Requirements Checklist -->
+          <div class="pw-requirements" id="pw-requirements">
+            <div class="pw-req" id="req-length"><span class="req-icon">✓</span> At least 8 characters</div>
+            <div class="pw-req" id="req-upper"><span class="req-icon">✓</span> One uppercase letter</div>
+            <div class="pw-req" id="req-lower"><span class="req-icon">✓</span> One lowercase letter</div>
+            <div class="pw-req" id="req-digit"><span class="req-icon">✓</span> One digit</div>
+          </div>
+
+          <!-- Strength Meter -->
+          <div class="strength-meter" id="strength-meter">
+            <div class="strength-bar-track"><div class="strength-bar-fill"></div></div>
+            <div class="strength-label" id="strength-label"></div>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label class="form-label" for="confirm-password">Confirm Password</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+            </svg>
+            <input type="password" id="confirm-password" class="form-input" placeholder="Confirm your password" autocomplete="new-password" required style="padding-right: 48px" oninput="checkPasswordMatch()" />
+            <button type="button" class="password-toggle" onclick="togglePassword('confirm-password', this)" aria-label="Toggle confirm password">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="field-error" id="confirm-error">⚠ Passwords do not match</div>
+        </div>
+
+        <button type="submit" class="auth-btn" id="register-btn">
+          <span class="btn-text">Create Account</span>
+          <div class="btn-loader"><div class="spinner"></div></div>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Check if already logged in ──
+    (function() {
+      const token = getCookie('access_token');
+      if (token) window.location.href = '/';
+    })();
+
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
+    }
+
+    function showMessage(type, text) {
+      const el = document.getElementById('auth-message');
+      el.className = 'auth-message visible ' + type;
+      document.getElementById('auth-message-icon').textContent = type === 'error' ? '⚠️' : '✅';
+      document.getElementById('auth-message-text').textContent = text;
+      if (type === 'error') { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 500); }
+    }
+
+    function hideMessage() { document.getElementById('auth-message').className = 'auth-message'; }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.innerHTML = isHidden
+        ? `<svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>`
+        : `<svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`;
+    }
+
+    // ── Username Validation ──
+    function validateUsername() {
+      const input = document.getElementById('username');
+      const error = document.getElementById('username-error');
+      const val = input.value.trim();
+
+      if (val.length > 0 && val.length < 3) {
+        input.classList.add('input-error');
+        input.classList.remove('input-success');
+        error.textContent = '⚠ Username must be at least 3 characters';
+        error.classList.add('visible');
+      } else if (val.length > 0 && !/^[a-zA-Z0-9_]+$/.test(val)) {
+        input.classList.add('input-error');
+        input.classList.remove('input-success');
+        error.textContent = '⚠ Only letters, numbers, and underscores allowed';
+        error.classList.add('visible');
+      } else if (val.length >= 3) {
+        input.classList.remove('input-error');
+        input.classList.add('input-success');
+        error.classList.remove('visible');
+      } else {
+        input.classList.remove('input-error', 'input-success');
+        error.classList.remove('visible');
+      }
+    }
+
+    // ── Password Strength ──
+    function checkPasswordStrength() {
+      const pw = document.getElementById('password').value;
+      const meter = document.getElementById('strength-meter');
+      const label = document.getElementById('strength-label');
+
+      const hasLength = pw.length >= 8;
+      const hasUpper = /[A-Z]/.test(pw);
+      const hasLower = /[a-z]/.test(pw);
+      const hasDigit = /[0-9]/.test(pw);
+      const hasSpecial = /[^A-Za-z0-9]/.test(pw);
+
+      // Update requirement checklist
+      toggleReq('req-length', hasLength);
+      toggleReq('req-upper', hasUpper);
+      toggleReq('req-lower', hasLower);
+      toggleReq('req-digit', hasDigit);
+
+      if (pw.length === 0) {
+        meter.className = 'strength-meter';
+        label.textContent = '';
+        return;
+      }
+
+      let score = 0;
+      if (hasLength) score++;
+      if (hasUpper) score++;
+      if (hasLower) score++;
+      if (hasDigit) score++;
+      if (hasSpecial) score++;
+      if (pw.length >= 12) score++;
+
+      if (score <= 2) {
+        meter.className = 'strength-meter strength-weak';
+        label.textContent = 'Weak password';
+      } else if (score <= 4) {
+        meter.className = 'strength-meter strength-fair';
+        label.textContent = 'Fair password';
+      } else {
+        meter.className = 'strength-meter strength-strong';
+        label.textContent = 'Strong password';
+      }
+
+      // Also check confirm match
+      checkPasswordMatch();
+    }
+
+    function toggleReq(id, met) {
+      const el = document.getElementById(id);
+      if (met) el.classList.add('met');
+      else el.classList.remove('met');
+    }
+
+    // ── Confirm Password Match ──
+    function checkPasswordMatch() {
+      const pw = document.getElementById('password').value;
+      const cpw = document.getElementById('confirm-password').value;
+      const error = document.getElementById('confirm-error');
+      const input = document.getElementById('confirm-password');
+
+      if (cpw.length === 0) {
+        input.classList.remove('input-error', 'input-success');
+        error.classList.remove('visible');
+        return;
+      }
+
+      if (pw !== cpw) {
+        input.classList.add('input-error');
+        input.classList.remove('input-success');
+        error.textContent = '⚠ Passwords do not match';
+        error.classList.add('visible');
+      } else {
+        input.classList.remove('input-error');
+        input.classList.add('input-success');
+        error.classList.remove('visible');
+      }
+    }
+
+    // ── Form Submit ──
+    async function handleRegister(event) {
+      event.preventDefault();
+      hideMessage();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const btn = document.getElementById('register-btn');
+
+      // Client-side validation
+      if (!username || !password || !confirmPassword) {
+        showMessage('error', 'Please fill in all fields.');
+        return;
+      }
+
+      if (username.length < 3) { showMessage('error', 'Username must be at least 3 characters.'); return; }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) { showMessage('error', 'Username can only contain letters, numbers, and underscores.'); return; }
+      if (password.length < 8) { showMessage('error', 'Password must be at least 8 characters.'); return; }
+      if (!/[A-Z]/.test(password)) { showMessage('error', 'Password must contain at least one uppercase letter.'); return; }
+      if (!/[a-z]/.test(password)) { showMessage('error', 'Password must contain at least one lowercase letter.'); return; }
+      if (!/[0-9]/.test(password)) { showMessage('error', 'Password must contain at least one digit.'); return; }
+      if (password !== confirmPassword) { showMessage('error', 'Passwords do not match.'); return; }
+
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        const resp = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, confirm_password: confirmPassword }),
+          credentials: 'include',
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          if (Array.isArray(data.detail)) {
+            showMessage('error', data.detail.map(d => d.msg).join('. '));
+          } else {
+            showMessage('error', data.detail || 'Registration failed.');
+          }
+          return;
+        }
+
+        localStorage.setItem('scholarsync_username', data.username);
+        showMessage('success', 'Account created! Redirecting...');
+        setTimeout(() => { window.location.href = '/'; }, 800);
+
+      } catch (err) {
+        showMessage('error', 'Connection error. Is the server running?');
+        console.error('Register error:', err);
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+
+</html>
